@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#ffffff">
+<title>かけいぼ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#fff;--bg2:#f5f5f3;--bg3:#efefed;
+  --text:#1a1a1a;--text2:#666;--text3:#999;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.18);
+  --green:#1D9E75;--green-bg:#E1F5EE;
+  --red:#D85A30;--red-bg:#FAECE7;
+  --blue:#1D4ED8;
+  --radius:10px;--radius-lg:14px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
+    --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;
+    --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.18);
+    --green-bg:#0a3d2b;--red-bg:#3d1a0a;
+  }
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;}
+.app{max-width:430px;margin:0 auto;background:var(--bg3);min-height:100vh;padding-bottom:88px;}
+.header{background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 16px;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;}
+.header h1{font-size:18px;font-weight:600;}
+.header-right button{background:none;border:0.5px solid var(--border2);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text2);cursor:pointer;}
+.month-nav{background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:0.5px solid var(--border);}
+.month-nav button{background:none;border:0.5px solid var(--border2);border-radius:8px;width:32px;height:32px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.month-nav span{font-size:16px;font-weight:600;}
+.tabs{display:flex;background:var(--bg);border-bottom:0.5px solid var(--border);padding:0 16px;}
+.tab{flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;}
+.stat{background:var(--bg);border-radius:var(--radius-lg);padding:12px 14px;}
+.stat .label{font-size:11px;color:var(--text2);margin-bottom:4px;}
+.stat .value{font-size:20px;font-weight:600;letter-spacing:-0.5px;}
+.stat.full{grid-column:span 2;}
+.v-income{color:var(--green);}
+.v-expense{color:var(--red);}
+.budget-card{background:var(--bg);border-radius:var(--radius-lg);margin:0 12px 12px;padding:14px;}
+.budget-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.budget-top span{font-size:13px;color:var(--text2);}
+.budget-top strong{font-size:13px;font-weight:600;}
+.bar-track{height:8px;background:var(--bg2);border-radius:99px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:99px;transition:width 0.5s;}
+.budget-msg{font-size:12px;color:var(--text2);margin-top:6px;}
+.summary-section{padding:12px;}
+.summary-card{background:var(--bg);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden;}
+.summary-card-title{font-size:13px;font-weight:600;color:var(--text2);padding:12px 14px 8px;border-bottom:0.5px solid var(--border);}
+.cat-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border);}
+.cat-row:last-child{border-bottom:none;}
+.cat-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.cat-info{flex:1;min-width:0;}
+.cat-name{font-size:13px;font-weight:500;}
+.cat-bar-wrap{height:4px;background:var(--bg2);border-radius:99px;margin-top:4px;overflow:hidden;}
+.cat-bar{height:100%;border-radius:99px;background:var(--red);transition:width 0.5s;}
+.cat-amount{font-size:13px;font-weight:600;color:var(--red);flex-shrink:0;}
+.cat-count{font-size:11px;color:var(--text3);}
+.section-header{padding:4px 16px 8px;}
+.section-header span{font-size:13px;font-weight:600;color:var(--text2);}
+.entry-list{padding:0 12px;display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.entry{background:var(--bg);border-radius:var(--radius-lg);padding:12px 14px;display:flex;align-items:center;gap:12px;}
+.entry .icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.entry .info{flex:1;min-width:0;}
+.entry .info .name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.entry .info .meta{font-size:11px;color:var(--text2);margin-top:2px;}
+.entry .amount{font-size:15px;font-weight:600;flex-shrink:0;}
+.empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px;}
+.fab-area{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:12px;background:linear-gradient(to top,var(--bg3) 60%,transparent);display:flex;gap:10px;z-index:20;}
+.fab{height:50px;border-radius:25px;border:none;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;padding:0 22px;transition:transform 0.15s;flex:1;justify-content:center;}
+.fab:active{transform:scale(0.96);}
+.fab.primary{background:var(--blue);color:#fff;}
+.fab.camera{background:var(--bg);border:0.5px solid var(--border2);color:var(--text);flex:0 0 auto;padding:0 18px;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:30;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.sheet{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:20px 16px 32px;max-height:90vh;overflow-y:auto;}
+.sheet-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px;}
+.sheet h2{font-size:17px;font-weight:600;margin-bottom:16px;}
+.type-toggle{display:flex;gap:8px;margin-bottom:14px;}
+.type-btn{flex:1;height:38px;border-radius:var(--radius);border:0.5px solid var(--border2);background:none;font-size:14px;cursor:pointer;color:var(--text2);font-weight:500;}
+.type-btn.ae{background:var(--red-bg);color:var(--red);border-color:var(--red);}
+.type-btn.ai{background:var(--green-bg);color:var(--green);border-color:var(--green);}
+.form-row{margin-bottom:12px;}
+.form-row label{font-size:12px;color:var(--text2);display:block;margin-bottom:5px;font-weight:500;}
+.form-row input,.form-row select{width:100%;height:42px;border:0.5px solid var(--border2);border-radius:var(--radius);padding:0 12px;font-size:15px;background:var(--bg2);color:var(--text);outline:none;}
+.save-btn{width:100%;height:48px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-lg);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;}
+.cancel-btn{width:100%;height:44px;background:none;border:none;color:var(--text2);font-size:14px;margin-top:8px;cursor:pointer;}
+.cam-preview{width:100%;height:200px;background:#000;border-radius:var(--radius-lg);overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.cam-preview video{width:100%;height:100%;object-fit:cover;}
+.cam-ph{color:#888;font-size:13px;text-align:center;padding:20px;}
+.ai-box{background:var(--bg2);border-radius:var(--radius);padding:12px;font-size:13px;color:var(--text2);min-height:48px;line-height:1.6;}
+.receipt-items{display:flex;flex-direction:column;gap:6px;margin:12px 0;}
+.receipt-item{display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:var(--radius);padding:10px 12px;}
+.receipt-item input[type=checkbox]{width:18px;height:18px;flex-shrink:0;cursor:pointer;accent-color:var(--blue);}
+.receipt-item .ri-info{flex:1;min-width:0;}
+.receipt-item .ri-name{font-size:13px;font-weight:500;}
+.receipt-item select{height:28px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--bg);color:var(--text);padding:0 6px;margin-top:4px;}
+.receipt-item .ri-amount{font-size:14px;font-weight:600;color:var(--red);flex-shrink:0;}
+.cam-btns{display:flex;gap:8px;margin-top:12px;}
+.cam-btns button{flex:1;height:44px;border-radius:var(--radius);border:0.5px solid var(--border2);background:none;font-size:14px;cursor:pointer;color:var(--text);font-weight:500;}
+.cam-btns button.shoot{background:var(--blue);color:#fff;border-color:transparent;}
+.cam-btns button:disabled{opacity:0.4;cursor:not-allowed;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>&#x1F4B0; かけいぼ</h1>
+    <div class="header-right">
+      <button onclick="openBudget()">&#x2699; 予算</button>
+    </div>
+  </div>
+  <div class="month-nav">
+    <button onclick="changeMonth(-1)">&lt;</button>
+    <span id="month-label"></span>
+    <button onclick="changeMonth(1)">&gt;</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('home')">ホーム</div>
+    <div class="tab" onclick="switchTab('summary')">集計</div>
+    <div class="tab" onclick="switchTab('list')">明細</div>
+  </div>
+
+  <div class="tab-content active" id="tab-home">
+    <div class="stats">
+      <div class="stat"><div class="label">収入</div><div class="value v-income" id="total-income">&#xa5;0</div></div>
+      <div class="stat"><div class="label">支出</div><div class="value v-expense" id="total-expense">&#xa5;0</div></div>
+      <div class="stat full"><div class="label">残高</div><div class="value" id="total-balance">&#xa5;0</div></div>
+    </div>
+    <div class="budget-card">
+      <div class="budget-top"><span>今月の予算</span><strong id="budget-label"></strong></div>
+      <div class="bar-track"><div class="bar-fill" id="budget-fill" style="width:0%;background:var(--green);"></div></div>
+      <div class="budget-msg" id="budget-msg"></div>
+    </div>
+    <div class="section-header"><span>最近の明細</span></div>
+    <div class="entry-list" id="recent-list"></div>
+  </div>
+
+  <div class="tab-content" id="tab-summary">
+    <div class="summary-section">
+      <div class="summary-card">
+        <div class="summary-card-title">カテゴリ別支出</div>
+        <div id="cat-list"></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-title">カテゴリ別収入</div>
+        <div id="inc-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-list">
+    <div style="height:12px;"></div>
+    <div class="entry-list" id="entry-list"></div>
+  </div>
+</div>
+
+<div class="fab-area">
+  <button class="fab camera" onclick="openCamera()">&#x1F4F7; レシート</button>
+  <button class="fab primary" onclick="openAdd()">+ 追加</button>
+</div>
+
+<div class="overlay" id="add-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>収支を追加</h2>
+    <div class="type-toggle">
+      <button class="type-btn ae" id="btn-e" onclick="setType('expense')">支出</button>
+      <button class="type-btn" id="btn-i" onclick="setType('income')">収入</button>
+    </div>
+    <div class="form-row"><label>金額（円）</label><input type="number" id="inp-amount" placeholder="1500" inputmode="numeric"></div>
+    <div class="form-row"><label>メモ</label><input type="text" id="inp-name" placeholder="スーパー、給与など"></div>
+    <div class="form-row"><label>カテゴリ</label>
+      <select id="inp-cat">
+        <option value="食費">食費</option>
+        <option value="交通">交通</option>
+        <option value="日用品">日用品</option>
+        <option value="娯楽">娯楽</option>
+        <option value="光熱費">光熱費</option>
+        <option value="医療">医療</option>
+        <option value="給与">給与</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
+    <div class="form-row"><label>日付</label><input type="date" id="inp-date"></div>
+    <button class="save-btn" onclick="addEntry()">保存する</button>
+    <button class="cancel-btn" onclick="closeOverlay('add-overlay')">キャンセル</button>
+  </div>
+</div>
+
+<div class="overlay" id="cam-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>レシートを撮影</h2>
+    <div class="cam-preview" id="cam-preview-box">
+      <video id="cam-video" autoplay playsinline style="display:none;"></video>
+      <canvas id="cam-canvas" style="display:none;"></canvas>
+      <div class="cam-ph" id="cam-ph">カメラアイコンを押して起動</div>
+    </div>
+    <div class="ai-box" id="ai-box">AIがレシートの各項目を読み取ります</div>
+    <div class="receipt-items" id="receipt-items" style="display:none;"></div>
+    <div class="cam-btns">
+      <button id="btn-start" onclick="startCam()">起動</button>
+      <button class="shoot" id="btn-shoot" onclick="shoot()" disabled>撮影</button>
+    </div>
+    <button class="save-btn" id="btn-save-receipt" style="display:none;margin-top:12px;" onclick="saveReceipt()">選択した項目を保存</button>
+    <button class="cancel-btn" onclick="closeCam()">キャンセル</button>
+  </div>
+</div>
+
+<div class="overlay" id="budget-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>予算を設定</h2>
+    <div class="form-row"><label>月の支出予算（円）</label><input type="number" id="inp-budget" placeholder="100000" inputmode="numeric"></div>
+    <button class="save-btn" onclick="saveBudget()">保存する</button>
+    <button class="cancel-btn" onclick="closeOverlay('budget-overlay')">キャンセル</button>
+  </div>
+</div>
+
+<script>
+var SK = 'kakeibo_v4';
+var BK = 'kakeibo_budget_v4';
+var CAT = {'食費':'🍱','交通':'🚃','日用品':'🧴','娯楽':'🎮','光熱費':'💡','医療':'💊','給与':'💴','その他':'📦'};
+var CAT_KEYS = ['食費','交通','日用品','娯楽','光熱費','医療','給与','その他'];
+var ML = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+var entries = [];
+var budget = 100000;
+var cy, cm;
+var etype = 'expense';
+var vstream = null;
+var receiptItems = [];
+
+function fmt(n) {
+  return '\u00a5' + Math.round(n).toLocaleString('ja-JP');
+}
+
+function load() {
+  try { entries = JSON.parse(localStorage.getItem(SK)) || []; } catch(e) { entries = []; }
+  try { budget = parseInt(localStorage.getItem(BK)) || 100000; } catch(e) { budget = 100000; }
+}
+
+function save() {
+  try {
+    localStorage.setItem(SK, JSON.stringify(entries));
+    localStorage.setItem(BK, String(budget));
+  } catch(e) {}
+}
+
+function init() {
+  var n = new Date();
+  cy = n.getFullYear();
+  cm = n.getMonth();
+  document.getElementById('inp-date').value = n.toISOString().split('T')[0];
+  load();
+  render();
+}
+
+function changeMonth(d) {
+  cm += d;
+  if (cm > 11) { cm = 0; cy++; }
+  if (cm < 0) { cm = 11; cy--; }
+  render();
+}
+
+function getMe() {
+  return entries.filter(function(e) {
+    var d = new Date(e.date);
+    return d.getFullYear() === cy && d.getMonth() === cm;
+  });
+}
+
+function switchTab(t) {
+  var tabs = document.querySelectorAll('.tab');
+  var contents = document.querySelectorAll('.tab-content');
+  var names = ['home','summary','list'];
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].className = 'tab' + (names[i] === t ? ' active' : '');
+    contents[i].className = 'tab-content' + (names[i] === t ? ' active' : '');
+  }
+  render();
+}
+
+function render() {
+  document.getElementById('month-label').textContent = cy + '年' + ML[cm];
+  var me = getMe();
+  var inc = 0, exp = 0;
+  for (var i = 0; i < me.length; i++) {
+    if (me[i].type === 'income') inc += me[i].amount;
+    else exp += me[i].amount;
+  }
+  document.getElementById('total-income').textContent = fmt(inc);
+  document.getElementById('total-expense').textContent = fmt(exp);
+  document.getElementById('total-balance').textContent = fmt(inc - exp);
+  var pct = budget > 0 ? Math.min(100, Math.round(exp / budget * 100)) : 0;
+  document.getElementById('budget-label').textContent = fmt(exp) + ' / ' + fmt(budget);
+  document.getElementById('budget-fill').style.width = pct + '%';
+  document.getElementById('budget-fill').style.background = pct >= 90 ? 'var(--red)' : pct >= 70 ? '#BA7517' : 'var(--green)';
+  document.getElementById('budget-msg').textContent = pct >= 100 ? '予算を超えました' : '残り' + fmt(budget - exp) + '（' + (100 - pct) + '%）';
+
+  var sorted = me.slice().sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+
+  var recentEl = document.getElementById('recent-list');
+  var listEl = document.getElementById('entry-list');
+  if (!sorted.length) {
+    var empty = '<div class="empty">まだ記録がありません</div>';
+    recentEl.innerHTML = empty;
+    listEl.innerHTML = empty;
+  } else {
+    var recentHTML = '';
+    for (var i = 0; i < Math.min(5, sorted.length); i++) recentHTML += entryHTML(sorted[i]);
+    recentEl.innerHTML = recentHTML;
+    var allHTML = '';
+    for (var i = 0; i < sorted.length; i++) allHTML += entryHTML(sorted[i]);
+    listEl.innerHTML = allHTML;
+  }
+
+  renderSummary(me, exp, inc);
+}
+
+function entryHTML(e) {
+  var icon = CAT[e.category] || '📦';
+  var color = e.type === 'income' ? 'var(--green)' : 'var(--red)';
+  var bg = e.type === 'income' ? 'var(--green-bg)' : 'var(--red-bg)';
+  var sign = e.type === 'income' ? '+' : '-';
+  return '<div class="entry">'
+    + '<div class="icon" style="background:' + bg + '">' + icon + '</div>'
+    + '<div class="info"><div class="name">' + e.name + '</div><div class="meta">' + e.date + ' · ' + e.category + '</div></div>'
+    + '<div class="amount" style="color:' + color + '">' + sign + fmt(e.amount) + '</div>'
+    + '</div>';
+}
+
+function renderSummary(me, totalExp, totalInc) {
+  var expMap = {};
+  var incMap = {};
+  for (var i = 0; i < me.length; i++) {
+    var e = me[i];
+    if (e.type === 'expense') {
+      if (!expMap[e.category]) expMap[e.category] = {amount:0, count:0};
+      expMap[e.category].amount += e.amount;
+      expMap[e.category].count++;
+    } else {
+      if (!incMap[e.category]) incMap[e.category] = {amount:0, count:0};
+      incMap[e.category].amount += e.amount;
+      incMap[e.category].count++;
+    }
+  }
+
+  var expSorted = Object.keys(expMap).sort(function(a,b){ return expMap[b].amount - expMap[a].amount; });
+  var catEl = document.getElementById('cat-list');
+  if (!expSorted.length) {
+    catEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px;">支出の記録がありません</div>';
+  } else {
+    var h = '';
+    for (var i = 0; i < expSorted.length; i++) {
+      var cat = expSorted[i];
+      var v = expMap[cat];
+      var pct = totalExp > 0 ? Math.round(v.amount / totalExp * 100) : 0;
+      h += '<div class="cat-row">'
+        + '<div class="cat-icon" style="background:var(--red-bg)">' + (CAT[cat]||'📦') + '</div>'
+        + '<div class="cat-info"><div class="cat-name">' + cat + ' <span class="cat-count">' + v.count + '件 · ' + pct + '%</span></div>'
+        + '<div class="cat-bar-wrap"><div class="cat-bar" style="width:' + pct + '%"></div></div></div>'
+        + '<div class="cat-amount">' + fmt(v.amount) + '</div>'
+        + '</div>';
+    }
+    catEl.innerHTML = h;
+  }
+
+  var incSorted = Object.keys(incMap).sort(function(a,b){ return incMap[b].amount - incMap[a].amount; });
+  var incEl = document.getElementById('inc-list');
+  if (!incSorted.length) {
+    incEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px;">収入の記録がありません</div>';
+  } else {
+    var h = '';
+    for (var i = 0; i < incSorted.length; i++) {
+      var cat = incSorted[i];
+      var v = incMap[cat];
+      var pct = totalInc > 0 ? Math.round(v.amount / totalInc * 100) : 0;
+      h += '<div class="cat-row">'
+        + '<div class="cat-icon" style="background:var(--green-bg)">' + (CAT[cat]||'📦') + '</div>'
+        + '<div class="cat-info"><div class="cat-name">' + cat + ' <span class="cat-count">' + v.count + '件 · ' + pct + '%</span></div>'
+        + '<div class="cat-bar-wrap"><div class="cat-bar" style="width:' + pct + '%;background:var(--green)"></div></div></div>'
+        + '<div class="cat-amount" style="color:var(--green)">' + fmt(v.amount) + '</div>'
+        + '</div>';
+    }
+    incEl.innerHTML = h;
+  }
+}
+
+function openAdd() {
+  document.getElementById('add-overlay').classList.add('open');
+  document.getElementById('inp-amount').focus();
+}
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+function setType(t) {
+  etype = t;
+  document.getElementById('btn-e').className = 'type-btn' + (t === 'expense' ? ' ae' : '');
+  document.getElementById('btn-i').className = 'type-btn' + (t === 'income' ? ' ai' : '');
+  document.getElementById('inp-cat').value = t === 'income' ? '給与' : '食費';
+}
+function addEntry() {
+  var a = parseFloat(document.getElementById('inp-amount').value);
+  var n = document.getElementById('inp-name').value.trim() || 'メモなし';
+  var c = document.getElementById('inp-cat').value;
+  var d = document.getElementById('inp-date').value || new Date().toISOString().split('T')[0];
+  if (!a || a <= 0) { alert('金額を入力してください'); return; }
+  entries.push({id: Date.now(), type: etype, amount: a, name: n, category: c, date: d});
+  save(); render();
+  document.getElementById('inp-amount').value = '';
+  document.getElementById('inp-name').value = '';
+  closeOverlay('add-overlay');
+}
+
+function openCamera() { document.getElementById('cam-overlay').classList.add('open'); }
+function closeCam() {
+  document.getElementById('cam-overlay').classList.remove('open');
+  if (vstream) { vstream.getTracks().forEach(function(t){ t.stop(); }); vstream = null; }
+  document.getElementById('cam-video').style.display = 'none';
+  document.getElementById('cam-ph').style.display = 'block';
+  document.getElementById('btn-shoot').disabled = true;
+  document.getElementById('ai-box').textContent = 'AIがレシートの各項目を読み取ります';
+  document.getElementById('receipt-items').style.display = 'none';
+  document.getElementById('receipt-items').innerHTML = '';
+  document.getElementById('btn-save-receipt').style.display = 'none';
+  receiptItems = [];
+}
+
+function startCam() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('このブラウザではカメラが使えません');
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}, audio: false})
+    .then(function(stream) {
+      vstream = stream;
+      var v = document.getElementById('cam-video');
+      v.srcObject = stream;
+      v.style.display = 'block';
+      document.getElementById('cam-ph').style.display = 'none';
+      document.getElementById('btn-shoot').disabled = false;
+    })
+    .catch(function(e) {
+      alert('カメラエラー: ' + e.message);
+    });
+}
+
+function shoot() {
+  var v = document.getElementById('cam-video');
+  var canvas = document.getElementById('cam-canvas');
+  canvas.width = v.videoWidth;
+  canvas.height = v.videoHeight;
+  canvas.getContext('2d').drawImage(v, 0, 0);
+  var img = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+  var ai = document.getElementById('ai-box');
+  ai.textContent = 'AIが読み取り中...';
+  document.getElementById('btn-shoot').disabled = true;
+  document.getElementById('receipt-items').style.display = 'none';
+  document.getElementById('btn-save-receipt').style.display = 'none';
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 800,
+      messages: [{
+        role: 'user',
+        content: [
+          {type: 'image', source: {type: 'base64', media_type: 'image/jpeg', data: img}},
+          {type: 'text', text: 'このレシートから購入した各商品を抽出して、以下のJSON配列のみで返答してください（説明なし、マークダウンなし）：[{"name":"商品名","amount":金額の数値,"category":"食費/交通/日用品/娯楽/光熱費/医療/その他のいずれか","date":"YYYY-MM-DD"}]。日付不明なら今日の日付。合計行は含めない。'}
+        ]
+      }]
+    })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var text = data.content.map(function(c){ return c.text || ''; }).join('');
+    var clean = text.replace(/```json|```/g, '').trim();
+    var items = JSON.parse(clean);
+    receiptItems = items;
+    ai.textContent = items.length + '件の項目を読み取りました。保存する項目を選んでください。';
+    var itemsEl = document.getElementById('receipt-items');
+    itemsEl.style.display = 'flex';
+    var h = '';
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var opts = '';
+      for (var j = 0; j < CAT_KEYS.length; j++) {
+        var k = CAT_KEYS[j];
+        opts += '<option value="' + k + '"' + (k === item.category ? ' selected' : '') + '>' + CAT[k] + ' ' + k + '</option>';
+      }
+      h += '<div class="receipt-item">'
+        + '<input type="checkbox" id="ri_' + i + '" checked onchange="updateSaveBtn()">'
+        + '<div class="ri-info"><div class="ri-name">' + item.name + '</div>'
+        + '<select id="rc_' + i + '">' + opts + '</select></div>'
+        + '<div class="ri-amount">' + fmt(item.amount) + '</div>'
+        + '</div>';
+    }
+    itemsEl.innerHTML = h;
+    document.getElementById('btn-save-receipt').style.display = 'block';
+  })
+  .catch(function(e) {
+    ai.textContent = '読み取りに失敗しました。もう一度お試しください。';
+    document.getElementById('btn-shoot').disabled = false;
+  });
+}
+
+function updateSaveBtn() {
+  var any = false;
+  for (var i = 0; i < receiptItems.length; i++) {
+    var cb = document.getElementById('ri_' + i);
+    if (cb && cb.checked) { any = true; break; }
+  }
+  document.getElementById('btn-save-receipt').disabled = !any;
+}
+
+function saveReceipt() {
+  var today = new Date().toISOString().split('T')[0];
+  for (var i = 0; i < receiptItems.length; i++) {
+    var cb = document.getElementById('ri_' + i);
+    var cat = document.getElementById('rc_' + i);
+    if (cb && cb.checked) {
+      entries.push({
+        id: Date.now() + i,
+        type: 'expense',
+        amount: receiptItems[i].amount,
+        name: receiptItems[i].name,
+        category: cat ? cat.value : receiptItems[i].category,
+        date: receiptItems[i].date || today
+      });
+    }
+  }
+  save(); render(); closeCam();
+}
+
+function openBudget() {
+  document.getElementById('inp-budget').value = budget;
+  document.getElementById('budget-overlay').classList.add('open');
+}
+function saveBudget() {
+  var v = parseInt(document.getElementById('inp-budget').value);
+  if (v > 0) { budget = v; save(); render(); }
+  closeOverlay('budget-overlay');
+}
+
+var overlays = document.querySelectorAll('.overlay');
+for (var i = 0; i < overlays.length; i++) {
+  overlays[i].addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+}
+
+init();
+</script>
+</body>
+</html>
