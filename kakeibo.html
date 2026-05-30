@@ -228,7 +228,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 <script>
 var SK = 'kakeibo_v4';
 var BK = 'kakeibo_budget_v4';
-var CAT = {'食費':'🍱','交通':'🚃','日用品':'🧴','娯楽':'🎮','光熱費':'💡','医療':'💊','給与':'💴','その他':'📦'};
+var CAT = {'食費':'[食]','交通':'[交]','日用品':'[品]','娯楽':'[遊]','光熱費':'[電]','医療':'[薬]','給与':'[金]','その他':'[他]'};
 var CAT_KEYS = ['食費','交通','日用品','娯楽','光熱費','医療','給与','その他'];
 var ML = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 var entries = [];
@@ -303,7 +303,7 @@ function render() {
   document.getElementById('budget-label').textContent = fmt(exp) + ' / ' + fmt(budget);
   document.getElementById('budget-fill').style.width = pct + '%';
   document.getElementById('budget-fill').style.background = pct >= 90 ? 'var(--red)' : pct >= 70 ? '#BA7517' : 'var(--green)';
-  document.getElementById('budget-msg').textContent = pct >= 100 ? '予算を超えました' : '残り' + fmt(budget - exp) + '（' + (100 - pct) + '%）';
+  document.getElementById('budget-msg').textContent = pct >= 100 ? '予算を超えました' : '残り' + fmt(budget - exp) + '(' + (100 - pct) + '%)';
 
   var sorted = me.slice().sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
 
@@ -326,7 +326,7 @@ function render() {
 }
 
 function entryHTML(e) {
-  var icon = CAT[e.category] || '📦';
+  var icon = CAT[e.category] || '[他]';
   var color = e.type === 'income' ? 'var(--green)' : 'var(--red)';
   var bg = e.type === 'income' ? 'var(--green-bg)' : 'var(--red-bg)';
   var sign = e.type === 'income' ? '+' : '-';
@@ -364,7 +364,7 @@ function renderSummary(me, totalExp, totalInc) {
       var v = expMap[cat];
       var pct = totalExp > 0 ? Math.round(v.amount / totalExp * 100) : 0;
       h += '<div class="cat-row">'
-        + '<div class="cat-icon" style="background:var(--red-bg)">' + (CAT[cat]||'📦') + '</div>'
+        + '<div class="cat-icon" style="background:var(--red-bg)">' + (CAT[cat]||'[他]') + '</div>'
         + '<div class="cat-info"><div class="cat-name">' + cat + ' <span class="cat-count">' + v.count + '件 · ' + pct + '%</span></div>'
         + '<div class="cat-bar-wrap"><div class="cat-bar" style="width:' + pct + '%"></div></div></div>'
         + '<div class="cat-amount">' + fmt(v.amount) + '</div>'
@@ -384,7 +384,7 @@ function renderSummary(me, totalExp, totalInc) {
       var v = incMap[cat];
       var pct = totalInc > 0 ? Math.round(v.amount / totalInc * 100) : 0;
       h += '<div class="cat-row">'
-        + '<div class="cat-icon" style="background:var(--green-bg)">' + (CAT[cat]||'📦') + '</div>'
+        + '<div class="cat-icon" style="background:var(--green-bg)">' + (CAT[cat]||'[他]') + '</div>'
         + '<div class="cat-info"><div class="cat-name">' + cat + ' <span class="cat-count">' + v.count + '件 · ' + pct + '%</span></div>'
         + '<div class="cat-bar-wrap"><div class="cat-bar" style="width:' + pct + '%;background:var(--green)"></div></div></div>'
         + '<div class="cat-amount" style="color:var(--green)">' + fmt(v.amount) + '</div>'
@@ -474,7 +474,7 @@ function shoot() {
         role: 'user',
         content: [
           {type: 'image', source: {type: 'base64', media_type: 'image/jpeg', data: img}},
-          {type: 'text', text: 'このレシートから購入した各商品を抽出して、以下のJSON配列のみで返答してください（説明なし、マークダウンなし）：[{"name":"商品名","amount":金額の数値,"category":"食費/交通/日用品/娯楽/光熱費/医療/その他のいずれか","date":"YYYY-MM-DD"}]。日付不明なら今日の日付。合計行は含めない。'}
+          {type: 'text', text: 'このレシートから購入した各商品を抽出して、以下のJSON配列のみで返答してください(説明なし、マークダウンなし):[{"name":"商品名","amount":金額の数値,"category":"食費/交通/日用品/娯楽/光熱費/医療/その他のいずれか","date":"YYYY-MM-DD"}]。日付不明なら今日の日付。合計行は含めない。'}
         ]
       }]
     })
